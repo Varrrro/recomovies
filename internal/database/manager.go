@@ -37,27 +37,26 @@ func (mg *Manager) AddUser(u *user.User) {
 // or the user don't exist.
 func (mg *Manager) AddRating(r *rating.Rating) error {
 	var m movie.Movie
-	mg.db.First(&m, "id = ?", r.MovieID)
-	if m.ID != r.MovieID {
-		return &NotFoundError{"movie", r.MovieID}
+	if err := mg.db.First(&m, "id = ?", r.MovieID).Error; gorm.IsRecordNotFoundError(err) {
+		return err
 	}
 
 	var u user.User
-	mg.db.First(&u, "id = ?", r.UserID)
-	if u.ID != r.UserID {
-		return &NotFoundError{"user", r.UserID}
+	if err := mg.db.First(&u, "id = ?", r.UserID).Error; gorm.IsRecordNotFoundError(err) {
+		return err
 	}
 
-	mg.db.Model(&m).Association("Ratings").Append(r)
+	if err := mg.db.Model(&m).Association("Ratings").Append(r).Error; gorm.IsRecordNotFoundError(err) {
+		return err
+	}
 	return nil
 }
 
 // FetchMovie with the given ID.
 func (mg *Manager) FetchMovie(id int) (*movie.Movie, error) {
 	var m movie.Movie
-	mg.db.Preload("Ratings").First(&m, "id = ?", id)
-	if m.ID != id {
-		return &movie.Movie{}, &NotFoundError{"movie", id}
+	if err := mg.db.Preload("Ratings").First(&m, "id = ?", id).Error; gorm.IsRecordNotFoundError(err) {
+		return nil, err
 	}
 	return &m, nil
 }
@@ -65,18 +64,33 @@ func (mg *Manager) FetchMovie(id int) (*movie.Movie, error) {
 // FetchUser with the given ID.
 func (mg *Manager) FetchUser(id int) (*user.User, error) {
 	var u user.User
-	mg.db.Preload("Ratings").First(&u, "id = ?", id)
-	if u.ID != id {
-		return &user.User{}, &NotFoundError{"user", id}
+	if err := mg.db.Preload("Ratings").First(&u, "id = ?", id).Error; gorm.IsRecordNotFoundError(err) {
+		return nil, err
 	}
 	return &u, nil
 }
 
 // FetchAllUsers present in the database.
-func (mg *Manager) FetchAllUsers() []user.User {
-	var u []user.User
+func (mg *Manager) FetchAllUsers() []*user.User {
+	var u []*user.User
 	mg.db.Preload("Ratings").Find(&u)
 	return u
+}
+
+// FetchUserRating for a given movie, if it exists.
+func (mg *Manager) FetchUserRating(userID, movieID int) (*rating.Rating, error) {
+	var r rating.Rating
+	if err := mg.db.Where(&rating.Rating{UserID: userID, MovieID: movieID}).First(&r).Error; gorm.IsRecordNotFoundError(err) {
+		return nil, err
+	}
+	return &r, nil
+}
+
+// FetchUnseenMoviesRatings by users in a given group.
+func (mg *Manager) FetchUnseenMoviesRatings(movieIDs, userIDs []int) []*rating.Rating {
+	var r []*rating.Rating
+	mg.db.Where("user_id IN (?)", userIDs).Not("movie_id", movieIDs).Find(&r)
+	return r
 }
 
 // GetMovieCount of the database.

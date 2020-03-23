@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/varrrro/recomovies/internal/database"
-	"github.com/varrrro/recomovies/internal/database/movie"
 	"github.com/varrrro/recomovies/internal/session"
 )
 
@@ -61,10 +60,8 @@ func (h *Handler) PostRating(c *gin.Context) {
 	} else {
 		redirectURL = fmt.Sprintf("/results?session_id=%s", s.ID)
 
-		// Process ratings and get recommendations
+		// Calculate active user bias
 		h.calculateBias(s)
-		h.defineNeighbors(s)
-		h.obtainRecommendations(s)
 	}
 	c.Redirect(http.StatusMovedPermanently, redirectURL)
 }
@@ -72,10 +69,10 @@ func (h *Handler) PostRating(c *gin.Context) {
 // GetResults handler.
 func (h *Handler) GetResults(c *gin.Context) {
 	s, _ := session.GetSession(c.Query("session_id"))
-	recs := make([]*movie.Movie, len(s.Recommendations))
-	for i := 0; i < len(s.Recommendations); i++ {
-		recs[i], _ = h.mg.FetchMovie(s.Recommendations[i])
-	}
 
-	c.HTML(http.StatusOK, "results.html", recs)
+	// Calculate neighboorhood and recommendations
+	h.defineNeighbors(s)
+	h.obtainRecommendations(s)
+
+	c.HTML(http.StatusOK, "results.html", s.Recommendations)
 }

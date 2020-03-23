@@ -8,9 +8,10 @@ import (
 
 // User present in the database.
 type User struct {
-	ID      int             `gorm:"primary_key"`
-	Ratings []rating.Rating `gorm:"foreignkey:UserID"`
-	Bias    float32
+	ID         int             `gorm:"primary_key"`
+	Ratings    []rating.Rating `gorm:"foreignkey:UserID"`
+	Bias       float64         ``
+	Similarity float64         `gorm:"-"`
 }
 
 // New user instance.
@@ -30,6 +31,6 @@ func (u *User) CalculateBias() error {
 	for _, r := range u.Ratings {
 		sum += r.Value
 	}
-	u.Bias = float32(sum) / float32(len(u.Ratings))
+	u.Bias = float64(sum) / float64(len(u.Ratings))
 	return nil
 }

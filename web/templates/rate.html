@@ -19,7 +19,8 @@
             <div class="col-6 mx-auto">
                 <div class="jumbotron text-center">
                     <h1>{{ .title }}</h1>
-                    <form action="/rating/{{ .n }}?session_id={{ session_id }}" method="POST">
+                    <div class="my-4"></div>
+                    <form action="/rating/{{ .n }}?session_id={{ .session_id }}" method="POST">
                         <div class="row justify-items-center no-gutters">
                             <div class="col-8">
                                 <select class="form-control" name="rating">

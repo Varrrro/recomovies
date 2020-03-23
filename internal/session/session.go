@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/varrrro/recomovies/internal/database/movie"
+	"github.com/varrrro/recomovies/internal/database/user"
 )
 
 var (
@@ -13,9 +16,9 @@ var (
 
 // GetSession from memory.
 func GetSession(id string) (*Session, error) {
-	s, ok := current["id"]
+	s, ok := current[id]
 	if !ok {
-		return &Session{}, fmt.Errorf("No session with ID %s", id)
+		return nil, fmt.Errorf("No session with ID %s", id)
 	}
 	return s, nil
 }
@@ -25,18 +28,17 @@ type Session struct {
 	ID              string
 	Movies          []int
 	Ratings         map[int]int
-	Bias            float32
-	Neighborhood    map[int]float32
-	Recommendations []int
+	Bias            float64
+	Neighborhood    []*user.User
+	Recommendations []*movie.Movie
 }
 
 // New session instance.
 func New() *Session {
 	s := &Session{
-		ID:           randomID(6),
-		Movies:       make([]int, 20),
-		Ratings:      make(map[int]int),
-		Neighborhood: make(map[int]float32),
+		ID:      randomID(6),
+		Movies:  make([]int, 20),
+		Ratings: make(map[int]int),
 	}
 	current[s.ID] = s
 	return s

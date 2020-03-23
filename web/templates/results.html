@@ -14,9 +14,22 @@
 </head>
 
 <body>
-    {{ range . }}
-        {{ .Title }}
-    {{ end }}
+    <div class="container">
+        <div class="row">
+            <h1 class="mt-5 pt-5">Te recomendamos las siguientes películas</h1>
+        </div>
+        <div class="row">
+            {{ range . }}
+            <div class="col">
+                <div class="card my-4" style="width: 18rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ .Title }}</h5>
+                    </div>
+                </div>
+            </div>
+            {{ end }}
+        </div>
+    </div>
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
